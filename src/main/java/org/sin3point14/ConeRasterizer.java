@@ -30,12 +30,11 @@ import org.terasology.world.generator.plugin.WorldGeneratorPluginLibrary;
 public class ConeRasterizer implements WorldRasterizer {
     @In
     private WorldGeneratorPluginLibrary worldGeneratorPluginLibrary;
-
     private Block dirt;
 
     @Override
     public void initialize() {
-        dirt = CoreRegistry.get(BlockManager.class).getBlock("CoreBlocks:Dirt");
+        dirt = CoreRegistry.get(BlockManager.class).getBlock("CoreAssets:Stone");
     }
 
     @Override
