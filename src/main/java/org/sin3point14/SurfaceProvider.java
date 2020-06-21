@@ -36,11 +36,13 @@ public class SurfaceProvider implements FacetProvider {
     private Noise tileableNoise;
 
     // Vary this!!!
-    private final int gridSize = 4;
+    private final int gridSize = 7;
+
+    private final float simplexMagicNumber = 0.5773502691896258f;
 
     @Override
     public void setSeed(long seed) {
-        tileableNoise = new PerlinNoise(seed, gridSize);
+        tileableNoise = new SimplexNoise(seed, gridSize);
     }
 
     public float noiseWrapper(int x, int y, float xCenter, float yCenter, float minDistance, float maxDistance) {
@@ -48,14 +50,14 @@ public class SurfaceProvider implements FacetProvider {
         if (relative.equals(Vector2f.zero())) {
             return 1.0f;
         }
-        float scaledAngle = (((float) Math.atan2(relative.y, relative.x) + (float) Math.PI) * (float) gridSize) / (2.0f * (float) Math.PI);
+        float scaledAngle = (((float) Math.atan2(relative.y, relative.x) + (float) Math.PI) * ((float) gridSize * simplexMagicNumber)) / (2.0f * (float) Math.PI);
 
         float b = 1.0f / minDistance;
         float a = 1.0f / maxDistance - b;
 
         float adjustedNoise = (a * ((tileableNoise.noise(scaledAngle, scaledAngle) + 1.0f) / 2.0f) + b) * relative.length();
 
-        return 1.0f - TeraMath.clamp(adjustedNoise);
+        return (1.0f - TeraMath.clamp(adjustedNoise));
     }
 
     @Override
