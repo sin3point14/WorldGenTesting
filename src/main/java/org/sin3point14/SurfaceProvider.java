@@ -22,6 +22,7 @@ import org.terasology.math.geom.Rect2i;
 import org.terasology.math.geom.Vector2f;
 import org.terasology.utilities.procedural.Noise;
 import org.terasology.utilities.procedural.SimplexNoise;
+import org.terasology.utilities.procedural.SubSampledNoise;
 import org.terasology.utilities.random.FastRandom;
 import org.terasology.world.generation.Border3D;
 import org.terasology.world.generation.FacetProvider;
@@ -34,9 +35,9 @@ public class SurfaceProvider implements FacetProvider {
 
     private static final int MINHEIGHT = 70;
     private static final int MAXHEIGHT = 120;
-    private static final int MINGRIDSIZE = 20;
-    private static final int MAXGRIDSIZE = 30;
-    private static final float MINSLOPE = 0.6f;
+    private static final int MINGRIDSIZE = 8;
+    private static final int MAXGRIDSIZE = 12;
+    private static final float MINSLOPE = 0.7f;
     private static final float MAXSLOPE = 1.0f;
 
     private Noise tileableNoise;
@@ -56,8 +57,12 @@ public class SurfaceProvider implements FacetProvider {
 
     public float noiseWrapper(int x, int y, float xCenter, float yCenter, float minDistance, float maxDistance) {
         Vector2f relative = new Vector2f((float) x - xCenter, (float) y - yCenter);
+
+        float plainNoise = tileableNoise.noise(relative.x / 30f, relative.y / 30f);
+
         if (relative.equals(Vector2f.zero())) {
-            return 1.0f;
+//            return 1.0f + plainNoise / 10f;
+            return 0f;
         }
         float scaledAngle = (((float) Math.atan2(relative.y, relative.x) + (float) Math.PI) * ((float) gridSize * SimplexNoise.TILEABLE1DMAGICNUMBER)) / (2.0f * (float) Math.PI);
 
@@ -66,7 +71,15 @@ public class SurfaceProvider implements FacetProvider {
 
         float adjustedNoise = (a * ((tileableNoise.noise(scaledAngle, scaledAngle) + 1.0f) / 2.0f) + b) * relative.length();
 
-        return (1.0f - TeraMath.clamp(adjustedNoise));
+        float clampedInvertedNoise = (float) Math.pow((1.0f - TeraMath.clamp(adjustedNoise)), 1.2f);
+
+        float anotherIntermediate = (clampedInvertedNoise * (1 + plainNoise / 10f)) / 1.1f;
+
+        if(anotherIntermediate > 0.7f) {
+            anotherIntermediate -= 2 * (anotherIntermediate - 0.7f);
+        }
+
+        return anotherIntermediate;
     }
 
     @Override
