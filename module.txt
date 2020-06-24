@@ -6,7 +6,10 @@
     "description" : "",
     "dependencies" : [
         {"id": "CoreAssets", "minVersion": "2.0.0"},
-        {"id": "CoreWorlds", "minVersion": "1.0.0"}
+        {"id": "CoreWorlds", "minVersion": "1.0.0"},
+        {"id": "CoreRendering", "minVersion": "1.0.0"}
      ],
-    "serverSideOnly" : false
+    "serverSideOnly" : false,
+    "isGameplay": "true",
+    "defaultWorldGenerator": "WorldGenTesting:oki"
 }

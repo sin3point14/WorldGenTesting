@@ -20,10 +20,9 @@ import org.terasology.math.TeraMath;
 import org.terasology.math.geom.BaseVector2i;
 import org.terasology.math.geom.Rect2i;
 import org.terasology.math.geom.Vector2f;
-import org.terasology.persistence.typeHandling.PersistedData;
 import org.terasology.utilities.procedural.Noise;
-import org.terasology.utilities.procedural.PerlinNoise;
 import org.terasology.utilities.procedural.SimplexNoise;
+import org.terasology.utilities.random.FastRandom;
 import org.terasology.world.generation.Border3D;
 import org.terasology.world.generation.FacetProvider;
 import org.terasology.world.generation.GeneratingRegion;
@@ -33,15 +32,25 @@ import org.terasology.world.generation.facets.SurfaceHeightFacet;
 @Produces(SurfaceHeightFacet.class)
 public class SurfaceProvider implements FacetProvider {
 
+    private static final int MINHEIGHT = 70;
+    private static final int MAXHEIGHT = 120;
+    private static final int MINGRIDSIZE = 20;
+    private static final int MAXGRIDSIZE = 30;
+    private static final float MINSLOPE = 0.6f;
+    private static final float MAXSLOPE = 1.0f;
+
     private Noise tileableNoise;
+    private FastRandom random;
 
-    // Vary this!!!
-    private final int gridSize = 7;
-
-    private final float simplexMagicNumber = 0.5773502691896258f;
+    private int height;
+    private float innerRadius;
+    private float outerRadius;
+    private int gridSize;
 
     @Override
     public void setSeed(long seed) {
+        random = new FastRandom(seed);
+        gridSize = random.nextInt(MINGRIDSIZE, MAXGRIDSIZE);
         tileableNoise = new SimplexNoise(seed, gridSize);
     }
 
@@ -50,7 +59,7 @@ public class SurfaceProvider implements FacetProvider {
         if (relative.equals(Vector2f.zero())) {
             return 1.0f;
         }
-        float scaledAngle = (((float) Math.atan2(relative.y, relative.x) + (float) Math.PI) * ((float) gridSize * simplexMagicNumber)) / (2.0f * (float) Math.PI);
+        float scaledAngle = (((float) Math.atan2(relative.y, relative.x) + (float) Math.PI) * ((float) gridSize * SimplexNoise.TILEABLE1DMAGICNUMBER)) / (2.0f * (float) Math.PI);
 
         float b = 1.0f / minDistance;
         float a = 1.0f / maxDistance - b;
@@ -58,6 +67,13 @@ public class SurfaceProvider implements FacetProvider {
         float adjustedNoise = (a * ((tileableNoise.noise(scaledAngle, scaledAngle) + 1.0f) / 2.0f) + b) * relative.length();
 
         return (1.0f - TeraMath.clamp(adjustedNoise));
+    }
+
+    @Override
+    public void initialize() {
+        height = random.nextInt(MINHEIGHT, MAXHEIGHT);
+        innerRadius = height / random.nextFloat(MINSLOPE, (MAXSLOPE + 2 * MINSLOPE) / 3);
+        outerRadius = height / random.nextFloat((MINSLOPE + 2 * MAXSLOPE) / 3, MAXSLOPE);
     }
 
     @Override
@@ -69,7 +85,7 @@ public class SurfaceProvider implements FacetProvider {
         // Loop through every position in our 2d array
         Rect2i processRegion = facet.getWorldRegion();
         for (BaseVector2i position: processRegion.contents()) {
-            facet.setWorld(position, noiseWrapper(position.x(), position.y(), 0, 0, 20, 50) * 30);
+            facet.setWorld(position, noiseWrapper(position.x(), position.y(), 0, 0, innerRadius, outerRadius) * height);
         }
 
         // Pass our newly created and populated facet to the region
