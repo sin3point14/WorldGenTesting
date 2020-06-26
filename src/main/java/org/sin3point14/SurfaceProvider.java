@@ -16,13 +16,11 @@
 
 package org.sin3point14;
 
-import org.terasology.math.TeraMath;
 import org.terasology.math.geom.BaseVector2i;
 import org.terasology.math.geom.Rect2i;
-import org.terasology.math.geom.Vector2f;
 import org.terasology.utilities.procedural.Noise;
+import org.terasology.utilities.procedural.RegionSelectorNoise;
 import org.terasology.utilities.procedural.SimplexNoise;
-import org.terasology.utilities.procedural.SubSampledNoise;
 import org.terasology.utilities.random.FastRandom;
 import org.terasology.world.generation.Border3D;
 import org.terasology.world.generation.FacetProvider;
@@ -41,41 +39,30 @@ public class SurfaceProvider implements FacetProvider {
     private static final float MAXSLOPE = 1.0f;
 
     private Noise tileableNoise;
+    private RegionSelectorNoise regionNoise;
     private FastRandom random;
 
     private int height;
     private float innerRadius;
     private float outerRadius;
     private int gridSize;
+    private long seed;
 
     @Override
     public void setSeed(long seed) {
         random = new FastRandom(seed);
         gridSize = random.nextInt(MINGRIDSIZE, MAXGRIDSIZE);
         tileableNoise = new SimplexNoise(seed, gridSize);
+        this.seed = seed;
     }
 
-    public float noiseWrapper(int x, int y, float xCenter, float yCenter, float minDistance, float maxDistance) {
-        Vector2f relative = new Vector2f((float) x - xCenter, (float) y - yCenter);
-
-        float plainNoise = tileableNoise.noise(relative.x / 30f, relative.y / 30f);
-
-        if (relative.equals(Vector2f.zero())) {
-//            return 1.0f + plainNoise / 10f;
-            return 0f;
-        }
-        float scaledAngle = (((float) Math.atan2(relative.y, relative.x) + (float) Math.PI) * ((float) gridSize * SimplexNoise.TILEABLE1DMAGICNUMBER)) / (2.0f * (float) Math.PI);
-
-        float b = 1.0f / minDistance;
-        float a = 1.0f / maxDistance - b;
-
-        float adjustedNoise = (a * ((tileableNoise.noise(scaledAngle, scaledAngle) + 1.0f) / 2.0f) + b) * relative.length();
-
-        float clampedInvertedNoise = (float) Math.pow((1.0f - TeraMath.clamp(adjustedNoise)), 1.2f);
-
+    public float noiseWrapper(int x, int y) {
+        float baseNoise = regionNoise.noise(x, y);
+        float plainNoise = tileableNoise.noise(x / 30f, y / 30f);
+        float clampedInvertedNoise = (float) Math.pow(baseNoise, 2f);
         float anotherIntermediate = (clampedInvertedNoise * (1 + plainNoise / 10f)) / 1.1f;
 
-        if(anotherIntermediate > 0.7f) {
+        if (anotherIntermediate > 0.7f) {
             anotherIntermediate -= 2 * (anotherIntermediate - 0.7f);
         }
 
@@ -87,6 +74,7 @@ public class SurfaceProvider implements FacetProvider {
         height = random.nextInt(MINHEIGHT, MAXHEIGHT);
         innerRadius = height / random.nextFloat(MINSLOPE, (MAXSLOPE + 2 * MINSLOPE) / 3);
         outerRadius = height / random.nextFloat((MINSLOPE + 2 * MAXSLOPE) / 3, MAXSLOPE);
+        regionNoise = new RegionSelectorNoise(seed, gridSize, 0, 0, innerRadius, outerRadius);
     }
 
     @Override
@@ -98,7 +86,7 @@ public class SurfaceProvider implements FacetProvider {
         // Loop through every position in our 2d array
         Rect2i processRegion = facet.getWorldRegion();
         for (BaseVector2i position: processRegion.contents()) {
-            facet.setWorld(position, noiseWrapper(position.x(), position.y(), 0, 0, innerRadius, outerRadius) * height);
+            facet.setWorld(position, noiseWrapper(position.x(), position.y()) * height);
         }
 
         // Pass our newly created and populated facet to the region
