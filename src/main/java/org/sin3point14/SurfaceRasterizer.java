@@ -27,7 +27,7 @@ import org.terasology.world.generation.WorldRasterizer;
 import org.terasology.world.generation.facets.SurfaceHeightFacet;
 import org.terasology.world.generator.plugin.WorldGeneratorPluginLibrary;
 
-public class ConeRasterizer implements WorldRasterizer {
+public class SurfaceRasterizer implements WorldRasterizer {
     @In
     private WorldGeneratorPluginLibrary worldGeneratorPluginLibrary;
     private Block dirt;
