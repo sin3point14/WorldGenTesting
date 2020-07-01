@@ -6,7 +6,6 @@ package org.sin3point14;
 import org.terasology.math.TeraMath;
 import org.terasology.math.geom.Rect2i;
 import org.terasology.utilities.procedural.WhiteNoise;
-import org.terasology.utilities.random.FastRandom;
 import org.terasology.world.generation.Border3D;
 import org.terasology.world.generation.Facet;
 import org.terasology.world.generation.FacetBorder;
@@ -16,16 +15,15 @@ import org.terasology.world.generation.Produces;
 import org.terasology.world.generation.Requires;
 import org.terasology.world.generation.facets.SurfaceHeightFacet;
 
-@Requires(@Facet(value = SurfaceHeightFacet.class, border = @FacetBorder(sides = 90, bottom = 90, top = 90)))
+@Requires(@Facet(value = SurfaceHeightFacet.class, border = @FacetBorder(sides = Volcano.MAXWIDTH / 2, bottom = 0, top = Volcano.MAXHEIGHT)))
 @Produces(VolcanoFacet.class)
 public class VolcanoFacetProvider implements FacetProvider {
     private WhiteNoise noise;
-    private FastRandom random;
 
     @Override
     public void process(GeneratingRegion region) {
 //        Border3D border = region.getBorderForFacet(VolcanoFacet.class).extendBy(Volcano.MAXHEIGHT, 0, (int) (Volcano.MAXGRIDSIZE / Volcano.MINSLOPE));
-        Border3D border = region.getBorderForFacet(VolcanoFacet.class).extendBy(100, 100, 100);
+        Border3D border = region.getBorderForFacet(VolcanoFacet.class).maxWith(Volcano.MAXHEIGHT, 0, Volcano.MAXWIDTH / 2);
         VolcanoFacet volcanoFacet = new VolcanoFacet(region.getRegion(), border);
         SurfaceHeightFacet facet = region.getRegionFacet(SurfaceHeightFacet.class);
         Rect2i worldRegion = facet.getWorldRegion();
@@ -35,11 +33,10 @@ public class VolcanoFacetProvider implements FacetProvider {
                 int surfaceHeight = TeraMath.floorToInt(facet.getWorld(wx, wz));
                 if (surfaceHeight >= volcanoFacet.getWorldRegion().minY() &&
                         surfaceHeight <= volcanoFacet.getWorldRegion().maxY()) {
-//                    if (noise.noise(wx, wz) > 0.9999) {
-                    if(wx == 40 && wz == 40) {
-                        volcanoFacet.setWorld(wx, surfaceHeight, wz, new Volcano(random.nextLong(), 60, 60));
+                    if (noise.noise(wx, wz) > 0.9999) {
+                        volcanoFacet.setWorld(wx, surfaceHeight, wz, new Volcano(wx + wz, wx + (Volcano.MAXWIDTH / 2), wz + (Volcano.MAXWIDTH / 2)));
+//                        volcanoFacet.setWorld(wx, surfaceHeight, wz, new Volcano(wx + wz, wx + 30, wz + 30));
                     }
-//                    }
                 }
             }
         }
@@ -49,6 +46,5 @@ public class VolcanoFacetProvider implements FacetProvider {
 
     @Override public void setSeed(long seed) {
         noise = new WhiteNoise(seed);
-        random = new FastRandom(seed);
     }
 }

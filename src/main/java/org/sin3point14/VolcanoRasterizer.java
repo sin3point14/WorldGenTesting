@@ -65,11 +65,11 @@ public class VolcanoRasterizer implements WorldRasterizer {
 //            int min = 0;
 //            int height = (40 + 1) / 2;
 
-            for (int i = 0; i <= 80; i++) {
-                for (int k = 0; k <= 80; k++) {
+            for (int i = 0; i <= Volcano.MAXWIDTH; i++) {
+                for (int k = 0; k <= Volcano.MAXWIDTH; k++) {
                     Vector3i chunkBlockPosition = new Vector3i(i, 0, k).add(basePosition);
 
-                    int height = volcano.getHeight(i, k);
+                    int height = volcano.getHeight(chunkBlockPosition.x, chunkBlockPosition.z);
 
                     for (int j = 0; j <= height; j++) {
                         Vector3i chunkBlockPosition2 = new Vector3i(i, j, k).add(basePosition);
