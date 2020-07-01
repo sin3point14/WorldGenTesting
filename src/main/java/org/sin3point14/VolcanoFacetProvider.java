@@ -16,7 +16,7 @@ import org.terasology.world.generation.Produces;
 import org.terasology.world.generation.Requires;
 import org.terasology.world.generation.facets.SurfaceHeightFacet;
 
-@Requires(@Facet(value = SurfaceHeightFacet.class, border = @FacetBorder(sides = 18))) //beware
+@Requires(@Facet(value = SurfaceHeightFacet.class, border = @FacetBorder(sides = 90, bottom = 90, top = 90)))
 @Produces(VolcanoFacet.class)
 public class VolcanoFacetProvider implements FacetProvider {
     private WhiteNoise noise;
@@ -24,7 +24,8 @@ public class VolcanoFacetProvider implements FacetProvider {
 
     @Override
     public void process(GeneratingRegion region) {
-        Border3D border = region.getBorderForFacet(VolcanoFacet.class).extendBy(Volcano.MAXHEIGHT, 0, (int) (Volcano.MAXGRIDSIZE / Volcano.MINSLOPE));
+//        Border3D border = region.getBorderForFacet(VolcanoFacet.class).extendBy(Volcano.MAXHEIGHT, 0, (int) (Volcano.MAXGRIDSIZE / Volcano.MINSLOPE));
+        Border3D border = region.getBorderForFacet(VolcanoFacet.class).extendBy(100, 100, 100);
         VolcanoFacet volcanoFacet = new VolcanoFacet(region.getRegion(), border);
         SurfaceHeightFacet facet = region.getRegionFacet(SurfaceHeightFacet.class);
         Rect2i worldRegion = facet.getWorldRegion();
@@ -34,9 +35,11 @@ public class VolcanoFacetProvider implements FacetProvider {
                 int surfaceHeight = TeraMath.floorToInt(facet.getWorld(wx, wz));
                 if (surfaceHeight >= volcanoFacet.getWorldRegion().minY() &&
                         surfaceHeight <= volcanoFacet.getWorldRegion().maxY()) {
-                    if (noise.noise(wx, wz) > 0.9999) {
-                        volcanoFacet.setWorld(wx, surfaceHeight, wz, new Volcano(random));
+//                    if (noise.noise(wx, wz) > 0.9999) {
+                    if(wx == 40 && wz == 40) {
+                        volcanoFacet.setWorld(wx, surfaceHeight, wz, new Volcano(random.nextLong(), 60, 60));
                     }
+//                    }
                 }
             }
         }

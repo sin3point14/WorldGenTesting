@@ -39,6 +39,19 @@ public class VolcanoRasterizer implements WorldRasterizer {
         dirt = CoreRegistry.get(BlockManager.class).getBlock("CoreAssets:Stone");
     }
 
+//    public float noiseWrapper(int x, int y) {
+//        float baseNoise = regionNoise.noise(x, y);
+//        float plainNoise = tileableNoise.noise(x / 30f, y / 30f);
+//        float clampedInvertedNoise = (float) Math.pow(baseNoise, 2f);
+//        float anotherIntermediate = (clampedInvertedNoise * (1 + plainNoise / 10f)) / 1.1f;
+//
+//        if (anotherIntermediate > 0.7f) {
+//            anotherIntermediate -= 2 * (anotherIntermediate - 0.7f);
+//        }
+//
+//        return anotherIntermediate;
+//    }
+
     @Override
     public void generateChunk(CoreChunk chunk, Region chunkRegion) {
         VolcanoFacet volcanoFacet = chunkRegion.getFacet(VolcanoFacet.class);
@@ -48,22 +61,26 @@ public class VolcanoRasterizer implements WorldRasterizer {
             Vector3i basePosition = new Vector3i(entry.getKey());
             Volcano volcano = entry.getValue();
 
-            int size = 20;
-            int min = 0;
-            int height = (20 + 1) / 2;
+//            int size = 40;
+//            int min = 0;
+//            int height = (40 + 1) / 2;
 
-            for (int i = 0; i <= height; i++) {
-                for (int x = min; x <= size; x++) {
-                    for (int z = min; z <= size; z++) {
-                        Vector3i chunkBlockPosition = new Vector3i(x, i, z).add(basePosition);
+            for (int i = 0; i <= 80; i++) {
+                for (int k = 0; k <= 80; k++) {
+                    Vector3i chunkBlockPosition = new Vector3i(i, 0, k).add(basePosition);
+
+                    int height = volcano.getHeight(i, k);
+
+                    for (int j = 0; j <= height; j++) {
+                        Vector3i chunkBlockPosition2 = new Vector3i(i, j, k).add(basePosition);
 //                        if (chunk.getRegion().encompasses(chunkBlockPosition) && !region3i1.encompasses(chunkBlockPosition) &&     !region3i2.encompasses(chunkBlockPosition))
-                        if (chunk.getRegion().encompasses(chunkBlockPosition))
-                            chunk.setBlock(ChunkMath.calcBlockPos(chunkBlockPosition), dirt);
+                        if (chunk.getRegion().encompasses(chunkBlockPosition2))
+                            chunk.setBlock(ChunkMath.calcBlockPos(chunkBlockPosition2), dirt);
 
                     }
                 }
-                min++;
-                size--;
+//                min++;
+//                size--;
             }
 
         }
