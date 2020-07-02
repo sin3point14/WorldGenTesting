@@ -25,17 +25,21 @@ public class Volcano {
     private Noise tileableNoise;
     private RegionSelectorNoise regionNoise;
 
-    public int getHeight(int x, int z) {
+    public VolcanoHeightInfo getHeightAndIsLava(int x, int z) {
+//    public int getHeightAndIsLava(int x, int z) {
         float baseNoise = regionNoise.noise(x, z);
         float plainNoise = tileableNoise.noise(x / 15f, z / 15f);
         float clampedInvertedNoise = (float) Math.pow(baseNoise, 2f);
         float anotherIntermediate = (clampedInvertedNoise * (1 + plainNoise / 10f)) / 1.1f;
+        boolean isLava = false;
 
         if (anotherIntermediate > 0.7f) {
             anotherIntermediate -= 2 * (anotherIntermediate - 0.7f);
+            isLava = true;
         }
 
-        return (int) (anotherIntermediate * height);
+        return new VolcanoHeightInfo((int) (anotherIntermediate * height), isLava);
+//        return (int) (anotherIntermediate * height);
     }
 
     public Volcano(long seed, int xCenter, int zCenter) {

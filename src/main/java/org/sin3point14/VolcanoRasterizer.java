@@ -27,16 +27,19 @@ import org.terasology.world.generation.Region;
 import org.terasology.world.generation.WorldRasterizer;
 import org.terasology.world.generator.plugin.WorldGeneratorPluginLibrary;
 
+import java.util.AbstractMap;
 import java.util.Map;
 
 public class VolcanoRasterizer implements WorldRasterizer {
     @In
     private WorldGeneratorPluginLibrary worldGeneratorPluginLibrary;
-    private Block dirt;
+    private Block stone;
+    private Block lava;
 
     @Override
     public void initialize() {
-        dirt = CoreRegistry.get(BlockManager.class).getBlock("CoreAssets:Stone");
+        stone = CoreRegistry.get(BlockManager.class).getBlock("CoreAssets:Stone");
+        lava = CoreRegistry.get(BlockManager.class).getBlock("CoreAssets:Stone");
     }
 
 //    public float noiseWrapper(int x, int y) {
@@ -69,14 +72,19 @@ public class VolcanoRasterizer implements WorldRasterizer {
                 for (int k = 0; k <= Volcano.MAXWIDTH; k++) {
                     Vector3i chunkBlockPosition = new Vector3i(i, 0, k).add(basePosition);
 
-                    int height = volcano.getHeight(chunkBlockPosition.x, chunkBlockPosition.z);
+                    VolcanoHeightInfo blockInfo = volcano.getHeightAndIsLava(chunkBlockPosition.x, chunkBlockPosition.z);
+//                    int height = volcano.getHeightAndIsLava(chunkBlockPosition.x, chunkBlockPosition.z);
 
-                    for (int j = 0; j <= height; j++) {
+                    for (int j = 0; j <= blockInfo.height; j++) {
+//                    for (int j = 0; j <= height; j++) {
                         Vector3i chunkBlockPosition2 = new Vector3i(i, j, k).add(basePosition);
-//                        if (chunk.getRegion().encompasses(chunkBlockPosition) && !region3i1.encompasses(chunkBlockPosition) &&     !region3i2.encompasses(chunkBlockPosition))
-                        if (chunk.getRegion().encompasses(chunkBlockPosition2))
-                            chunk.setBlock(ChunkMath.calcBlockPos(chunkBlockPosition2), dirt);
-
+                        if (chunk.getRegion().encompasses(chunkBlockPosition2)) {
+                            if (blockInfo.isLava) {
+                                chunk.setBlock(ChunkMath.calcBlockPos(chunkBlockPosition2), lava);
+                            } else {
+                                chunk.setBlock(ChunkMath.calcBlockPos(chunkBlockPosition2), stone);
+                            }
+                        }
                     }
                 }
 //                min++;
