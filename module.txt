@@ -11,5 +11,5 @@
      ],
     "serverSideOnly" : false,
     "isGameplay": "true",
-    "defaultWorldGenerator": "WorldGenTesting:oki"
+    "defaultWorldGenerator": "CoreWorlds:FacetedPerlin"
 }

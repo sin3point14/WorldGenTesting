@@ -3,14 +3,16 @@
 
 package org.sin3point14;
 
+import org.terasology.entitySystem.Component;
+import org.terasology.rendering.nui.properties.Range;
 import org.terasology.utilities.procedural.Noise;
 import org.terasology.utilities.procedural.RegionSelectorNoise;
 import org.terasology.utilities.procedural.SimplexNoise;
 import org.terasology.utilities.random.FastRandom;
 
 public class Volcano {
-    public static final int MINHEIGHT = 40;
-    public static final int MAXHEIGHT = 60;
+    public static final int MINHEIGHT = 60;
+    public static final int MAXHEIGHT = 80;
     public static final int MINGRIDSIZE = 8;
     public static final int MAXGRIDSIZE = 12;
     public static final float MINSLOPE = 0.7f;
@@ -18,39 +20,43 @@ public class Volcano {
     public static final int MAXWIDTH = 2 * (int) (MAXHEIGHT / MINSLOPE);
 
     public int height;
-    private int gridSize;
-    public float innerRadius;
-    public float outerRadius;
 
-    private Noise tileableNoise;
-    private RegionSelectorNoise regionNoise;
+    // Mind that these values will be used for comparisons *after* squaring the base noise value
+    private final float volcanoTopNoiseValue;
+    private final float lavaStartNoiseValue;
 
-    public VolcanoHeightInfo getHeightAndIsLava(int x, int z) {
-//    public int getHeightAndIsLava(int x, int z) {
-        float baseNoise = regionNoise.noise(x, z);
-        float plainNoise = tileableNoise.noise(x / 15f, z / 15f);
-        float clampedInvertedNoise = (float) Math.pow(baseNoise, 2f);
-        float anotherIntermediate = (clampedInvertedNoise * (1 + plainNoise / 10f)) / 1.1f;
-        boolean isLava = false;
+    private final Noise tileableNoise;
+    private final RegionSelectorNoise regionNoise;
 
-        if (anotherIntermediate > 0.7f) {
-            anotherIntermediate -= 2 * (anotherIntermediate - 0.7f);
-            isLava = true;
-        }
-
-        return new VolcanoHeightInfo((int) (anotherIntermediate * height), isLava);
-//        return (int) (anotherIntermediate * height);
-    }
-
-    public Volcano(long seed, int xCenter, int zCenter) {
+    public Volcano(int xCenter, int zCenter) {
+        int seed = xCenter + zCenter;
         FastRandom random = new FastRandom(seed);
-        gridSize = random.nextInt(MINGRIDSIZE, MAXGRIDSIZE);
+        int gridSize = random.nextInt(MINGRIDSIZE, MAXGRIDSIZE);
         tileableNoise = new SimplexNoise(seed, gridSize);
         height = random.nextInt(MINHEIGHT, MAXHEIGHT);
-        innerRadius = height / random.nextFloat(MINSLOPE, (MAXSLOPE + 2 * MINSLOPE) / 3);
-        outerRadius = height / random.nextFloat((MINSLOPE + 2 * MAXSLOPE) / 3, MAXSLOPE);
+        float innerRadius = height / random.nextFloat(MINSLOPE, (MAXSLOPE + 2 * MINSLOPE) / 3);
+        float outerRadius = height / random.nextFloat((MINSLOPE + 2 * MAXSLOPE) / 3, MAXSLOPE);
         regionNoise = new RegionSelectorNoise(seed, gridSize, xCenter, zCenter, innerRadius, outerRadius);
-//        regionNoise = new RegionSelectorNoise(seed, gridSize, 0, 0, innerRadius, outerRadius);
+        volcanoTopNoiseValue = random.nextFloat(0.45f, 0.7f);
+        lavaStartNoiseValue = random.nextFloat(volcanoTopNoiseValue, 0.75f);
     }
 
+    public VolcanoHeightInfo getHeightAndIsLava(int x, int z) {
+        float baseNoise = regionNoise.noise(x, z);
+        // another noise layer to make the Volcano slope curvy
+        float plainNoise = tileableNoise.noise(x / 15f, z / 15f);
+        float noiseSquare = (float) Math.pow(baseNoise, 2f);
+        float mixedNoise = (noiseSquare * (1 + plainNoise / 10f)) / 1.1f;
+        boolean isLava = false;
+
+        if (mixedNoise > lavaStartNoiseValue) {
+            mixedNoise = lavaStartNoiseValue;
+            isLava = true;
+        }
+        if (mixedNoise > volcanoTopNoiseValue) {
+            mixedNoise -= 2 * (mixedNoise - volcanoTopNoiseValue);
+        }
+
+        return new VolcanoHeightInfo((int) (mixedNoise * height), isLava);
+    }
 }

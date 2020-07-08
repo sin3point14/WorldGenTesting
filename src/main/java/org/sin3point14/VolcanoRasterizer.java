@@ -24,13 +24,15 @@ import org.terasology.world.block.Block;
 import org.terasology.world.block.BlockManager;
 import org.terasology.world.chunks.CoreChunk;
 import org.terasology.world.generation.Region;
-import org.terasology.world.generation.WorldRasterizer;
+import org.terasology.world.generation.WorldRasterizerPlugin;
+import org.terasology.world.generator.plugin.RegisterPlugin;
 import org.terasology.world.generator.plugin.WorldGeneratorPluginLibrary;
 
-import java.util.AbstractMap;
 import java.util.Map;
+import java.util.Objects;
 
-public class VolcanoRasterizer implements WorldRasterizer {
+@RegisterPlugin
+public class VolcanoRasterizer implements WorldRasterizerPlugin {
     @In
     private WorldGeneratorPluginLibrary worldGeneratorPluginLibrary;
     private Block stone;
@@ -38,22 +40,9 @@ public class VolcanoRasterizer implements WorldRasterizer {
 
     @Override
     public void initialize() {
-        stone = CoreRegistry.get(BlockManager.class).getBlock("CoreAssets:Stone");
-        lava = CoreRegistry.get(BlockManager.class).getBlock("CoreAssets:Stone");
+        stone = Objects.requireNonNull(CoreRegistry.get(BlockManager.class)).getBlock("CoreAssets:Stone");
+        lava = Objects.requireNonNull(CoreRegistry.get(BlockManager.class)).getBlock("CoreAssets:Lava");
     }
-
-//    public float noiseWrapper(int x, int y) {
-//        float baseNoise = regionNoise.noise(x, y);
-//        float plainNoise = tileableNoise.noise(x / 30f, y / 30f);
-//        float clampedInvertedNoise = (float) Math.pow(baseNoise, 2f);
-//        float anotherIntermediate = (clampedInvertedNoise * (1 + plainNoise / 10f)) / 1.1f;
-//
-//        if (anotherIntermediate > 0.7f) {
-//            anotherIntermediate -= 2 * (anotherIntermediate - 0.7f);
-//        }
-//
-//        return anotherIntermediate;
-//    }
 
     @Override
     public void generateChunk(CoreChunk chunk, Region chunkRegion) {
@@ -64,19 +53,13 @@ public class VolcanoRasterizer implements WorldRasterizer {
             Vector3i basePosition = new Vector3i(entry.getKey());
             Volcano volcano = entry.getValue();
 
-//            int size = 40;
-//            int min = 0;
-//            int height = (40 + 1) / 2;
-
             for (int i = 0; i <= Volcano.MAXWIDTH; i++) {
                 for (int k = 0; k <= Volcano.MAXWIDTH; k++) {
                     Vector3i chunkBlockPosition = new Vector3i(i, 0, k).add(basePosition);
 
                     VolcanoHeightInfo blockInfo = volcano.getHeightAndIsLava(chunkBlockPosition.x, chunkBlockPosition.z);
-//                    int height = volcano.getHeightAndIsLava(chunkBlockPosition.x, chunkBlockPosition.z);
 
-                    for (int j = 0; j <= blockInfo.height; j++) {
-//                    for (int j = 0; j <= height; j++) {
+                    for (int j = 0; j < blockInfo.height; j++) {
                         Vector3i chunkBlockPosition2 = new Vector3i(i, j, k).add(basePosition);
                         if (chunk.getRegion().encompasses(chunkBlockPosition2)) {
                             if (blockInfo.isLava) {
@@ -87,17 +70,8 @@ public class VolcanoRasterizer implements WorldRasterizer {
                         }
                     }
                 }
-//                min++;
-//                size--;
             }
 
         }
-//            SurfaceHeightFacet surfaceHeightFacet = chunkRegion.getFacet(SurfaceHeightFacet.class);
-//        for (Vector3i position : chunkRegion.getRegion()) {
-//            float surfaceHeight = surfaceHeightFacet.getWorld(position.x, position.z);
-//            if (position.y < surfaceHeight) {
-//                chunk.setBlock(ChunkMath.calcBlockPos(position), dirt);
-//            }
-//        }
     }
 }
