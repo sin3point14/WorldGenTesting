@@ -11,11 +11,15 @@ import org.terasology.utilities.procedural.SimplexNoise;
 import org.terasology.utilities.random.FastRandom;
 
 public class Volcano {
-    public static final int MINHEIGHT = 60;
-    public static final int MAXHEIGHT = 80;
+    public static final int MINHEIGHT = 80;
+//    public static final int MINHEIGHT = 199;
+    public static final int MAXHEIGHT = 100;
+//    public static final int MAXHEIGHT = 200;
     public static final int MINGRIDSIZE = 8;
     public static final int MAXGRIDSIZE = 12;
+//    public static final float MINSLOPE = 10.0f;
     public static final float MINSLOPE = 0.7f;
+//    public static final float MAXSLOPE = 11.0f;
     public static final float MAXSLOPE = 1.0f;
     public static final int MAXWIDTH = 2 * (int) (MAXHEIGHT / MINSLOPE);
 
@@ -46,6 +50,7 @@ public class Volcano {
         // another noise layer to make the Volcano slope curvy
         float plainNoise = tileableNoise.noise(x / 15f, z / 15f);
         float noiseSquare = (float) Math.pow(baseNoise, 2f);
+//        float noiseSquare = (float) Math.pow(baseNoise, 2f);
         float mixedNoise = (noiseSquare * (1 + plainNoise / 10f)) / 1.1f;
         boolean isLava = false;
 

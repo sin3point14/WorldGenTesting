@@ -87,7 +87,7 @@ public class SurfaceProvider implements FacetProvider {
         Rect2i processRegion = facet.getWorldRegion();
         for (BaseVector2i position: processRegion.contents()) {
 //            facet.setWorld(position, noiseWrapper(position.x(), position.y()) * height);
-            facet.setWorld(position, 0);
+            facet.setWorld(position, 66);
         }
 
         // Pass our newly created and populated facet to the region
