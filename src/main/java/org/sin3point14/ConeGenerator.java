@@ -37,9 +37,9 @@ public class ConeGenerator extends BaseFacetedWorldGenerator {
         return new WorldBuilder(worldGeneratorPluginLibrary)
                 .addProvider(new SurfaceProvider())
                 .addProvider(new SeaLevelProvider(66))
-                .addProvider(new VolcanoProvider())
+//                .addProvider(new VolcanoProvider())
                 .addRasterizer(new SurfaceRasterizer())
-                .addRasterizer(new VolcanoRasterizer())
+//                .addRasterizer(new VolcanoRasterizer())
                 .addPlugins();
     }
 

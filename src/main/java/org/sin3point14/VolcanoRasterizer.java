@@ -32,8 +32,8 @@ import org.terasology.world.generator.plugin.WorldGeneratorPluginLibrary;
 import java.util.Map;
 import java.util.Objects;
 
-//@RegisterPlugin
-public class VolcanoRasterizer implements WorldRasterizer {
+@RegisterPlugin
+public class VolcanoRasterizer implements WorldRasterizerPlugin {
     @In
     private WorldGeneratorPluginLibrary worldGeneratorPluginLibrary;
     private Block stone;
