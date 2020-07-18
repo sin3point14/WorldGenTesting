@@ -28,8 +28,8 @@ import org.terasology.world.generator.plugin.RegisterPlugin;
 
 @RegisterPlugin
 @Requires({
-        @Facet(value = SurfaceHeightFacet.class, border = @FacetBorder(sides = Volcano.MAXWIDTH)),
-        @Facet(value = SeaLevelFacet.class, border = @FacetBorder(sides = Volcano.MAXWIDTH))
+        @Facet(value = SurfaceHeightFacet.class, border = @FacetBorder(sides = Volcano.MAXWIDTH / 2)),
+        @Facet(value = SeaLevelFacet.class, border = @FacetBorder(sides = Volcano.MAXWIDTH / 2))
 })
 @Produces(VolcanoFacet.class)
 public class VolcanoProvider implements FacetProviderPlugin {
@@ -37,8 +37,8 @@ public class VolcanoProvider implements FacetProviderPlugin {
 
     @Override
     public void process(GeneratingRegion region) {
-        Border3D border = region.getBorderForFacet(VolcanoFacet.class).extendBy(0, Volcano.MAXHEIGHT * 2,
-                Volcano.MAXWIDTH);
+        Border3D border = region.getBorderForFacet(VolcanoFacet.class).extendBy(0, Volcano.MAXHEIGHT,
+                Volcano.MAXWIDTH / 2);
         VolcanoFacet volcanoFacet = new VolcanoFacet(region.getRegion(), border);
         SurfaceHeightFacet surfaceHeightFacet = region.getRegionFacet(SurfaceHeightFacet.class);
         Rect2i worldRegion = surfaceHeightFacet.getWorldRegion();
@@ -50,19 +50,10 @@ public class VolcanoProvider implements FacetProviderPlugin {
                 int surfaceHeight = TeraMath.floorToInt(surfaceHeightFacet.getWorld(wx, wz));
                 int seaLevel = seaLevelFacet.getSeaLevel();
                 if (surfaceHeight > seaLevel && noise.noise(wx, wz) > 0.9999) {
-//                    int xCenter = wx + (Volcano.MAXWIDTH / 2);
-                    int xCenter = wx;
-//                    int yCenter = wz + (Volcano.MAXWIDTH / 2);
-                    int yCenter = wz;
-                    Volcano volcano = new Volcano(xCenter, yCenter);
+                    Volcano volcano = new Volcano(wx, wz);
 
-                    int lowestY = getLowestY(new Vector3i(wx, surfaceHeight, wz), surfaceHeightFacet,
-                            new Vector2i(volcano.getCenter()), (int) volcano.getInnerRadius(), (int) volcano.getOuterRadius());
-
-//                    border = region.getBorderForFacet(VolcanoFacet.class).maxWith(0, (int) volcano.getHeight() + lowestY + 10,
-//                            Volcano.MAXWIDTH);
-//                    volcanoFacet = new VolcanoFacet(region.getRegion(), border);
-
+                    int lowestY = getLowestY(surfaceHeightFacet, new Vector2i(volcano.getCenter()),
+                            (int) volcano.getInnerRadius(), (int) volcano.getOuterRadius());
 
                     if (lowestY >= volcanoFacet.getWorldRegion().minY()
                             && lowestY <= volcanoFacet.getWorldRegion().maxY()) {
@@ -80,11 +71,11 @@ public class VolcanoProvider implements FacetProviderPlugin {
     public void setSeed(long seed) {
         // comment this for testing and
 //        noise = new SubSampledNoise(new WhiteNoise(seed), new Vector2f(0.1f, 0.1f), Integer.MAX_VALUE);
-        // uncomment this for testing, Warning: this will slow down worldgen by a lot!!!
+        // uncomment this for testing, Warning: this will spam volcanoes into the world
          noise = new WhiteNoise(seed);
     }
 
-    private int getLowestY(Vector3i corner, BaseFieldFacet2D facet, Vector2i center, int minRadius, int maxRadius) {
+    private int getLowestY(BaseFieldFacet2D facet, Vector2i center, int minRadius, int maxRadius) {
 
         //Note- check edges only
         Vector2i stepX = new Vector2i(1, 0);

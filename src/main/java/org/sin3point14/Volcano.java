@@ -46,7 +46,7 @@ public class Volcano {
         height = random.nextInt(MINHEIGHT, MAXHEIGHT);
         outerRadius = height / random.nextFloat(MINSLOPE, (MAXSLOPE + 2 * MINSLOPE) / 3);
 
-        center = new Vector2i(xCenter + outerRadius, zCenter + outerRadius);
+        center = new Vector2i(xCenter, zCenter);
 
         innerRadius = height / random.nextFloat((MINSLOPE + 2 * MAXSLOPE) / 3, MAXSLOPE);
         regionNoise = new RegionSelectorNoise(seed, gridSize, center.x(), center.y(), innerRadius, outerRadius);
