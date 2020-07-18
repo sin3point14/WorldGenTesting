@@ -54,8 +54,10 @@ public class VolcanoRasterizer implements WorldRasterizerPlugin {
             Vector3i basePosition = new Vector3i(entry.getKey());
             Volcano volcano = entry.getValue();
 
-            for (int i = 0; i <= Volcano.MAXWIDTH; i++) {
-                for (int k = 0; k <= Volcano.MAXWIDTH; k++) {
+            int extent = (int) volcano.getOuterRadius() * 2;
+
+            for (int i = 0; i <= extent; i++) {
+                for (int k = 0; k <= extent; k++) {
                     Vector3i chunkBlockPosition = new Vector3i(i, 0, k).add(basePosition);
 
                     VolcanoHeightInfo blockInfo = volcano.getHeightAndIsLava(chunkBlockPosition.x, chunkBlockPosition.z);

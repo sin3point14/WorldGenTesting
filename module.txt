@@ -11,5 +11,5 @@
      ],
     "serverSideOnly" : false,
     "isGameplay": "true",
-    "defaultWorldGenerator": "CoreWorlds:facetedSimplex"
+    "defaultWorldGenerator": "WorldGenTesting:oki"
 }

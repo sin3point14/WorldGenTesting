@@ -7,6 +7,7 @@ import org.terasology.entitySystem.Component;
 import org.terasology.math.TeraMath;
 import org.terasology.math.geom.Rect2i;
 import org.terasology.math.geom.Vector2f;
+import org.terasology.math.geom.Vector2i;
 import org.terasology.math.geom.Vector3i;
 import org.terasology.rendering.nui.properties.Range;
 import org.terasology.utilities.procedural.Noise;
@@ -26,8 +27,6 @@ import org.terasology.world.generation.facets.base.BaseFieldFacet2D;
 import org.terasology.world.generator.plugin.RegisterPlugin;
 
 @RegisterPlugin
-//@Requires(@Facet(value = SurfaceHeightFacet.class, border = @FacetBorder(sides = Volcano.MAXWIDTH, bottom = 0, top =
-//        Volcano.MAXHEIGHT)))
 @Requires({
         @Facet(value = SurfaceHeightFacet.class, border = @FacetBorder(sides = Volcano.MAXWIDTH)),
         @Facet(value = SeaLevelFacet.class, border = @FacetBorder(sides = Volcano.MAXWIDTH))
@@ -51,19 +50,24 @@ public class VolcanoProvider implements FacetProviderPlugin {
                 int surfaceHeight = TeraMath.floorToInt(surfaceHeightFacet.getWorld(wx, wz));
                 int seaLevel = seaLevelFacet.getSeaLevel();
                 if (surfaceHeight > seaLevel && noise.noise(wx, wz) > 0.9999) {
-                    int lowestY = getLowestY(new Vector3i(wx, surfaceHeight, wz), surfaceHeightFacet);
+//                    int xCenter = wx + (Volcano.MAXWIDTH / 2);
+                    int xCenter = wx;
+//                    int yCenter = wz + (Volcano.MAXWIDTH / 2);
+                    int yCenter = wz;
+                    Volcano volcano = new Volcano(xCenter, yCenter);
 
-//                if (surfaceHeight >= volcanoFacet.getWorldRegion().minY()
-//                        && surfaceHeight <= volcanoFacet.getWorldRegion().maxY()) {
+                    int lowestY = getLowestY(new Vector3i(wx, surfaceHeight, wz), surfaceHeightFacet,
+                            new Vector2i(volcano.getCenter()), (int) volcano.getInnerRadius(), (int) volcano.getOuterRadius());
+
+//                    border = region.getBorderForFacet(VolcanoFacet.class).maxWith(0, (int) volcano.getHeight() + lowestY + 10,
+//                            Volcano.MAXWIDTH);
+//                    volcanoFacet = new VolcanoFacet(region.getRegion(), border);
+
+
                     if (lowestY >= volcanoFacet.getWorldRegion().minY()
                             && lowestY <= volcanoFacet.getWorldRegion().maxY()) {
-//                    if (noise.noise(wx, wz) > 0.9999 && checkGradient(new Vector3i(wx, surfaceHeight, wz),
-//                    surfaceHeightFacet)) {
-//                    int lowestY = getLowestY(new Vector3i(wx, surfaceHeight, wz), surfaceHeightFacet);
-//                    if (wx == 0 && wz == 0) {
-                        volcanoFacet.setWorld(wx, lowestY, wz, new Volcano(wx + (Volcano.MAXWIDTH / 2),
-//                                volcanoFacet.setWorld(wx, surfaceHeight, wz, new Volcano(wx + (Volcano.MAXWIDTH / 2),
-                                wz + (Volcano.MAXWIDTH / 2)));
+
+                        volcanoFacet.setWorld(wx, lowestY, wz, volcano);
                     }
                 }
             }
@@ -76,66 +80,29 @@ public class VolcanoProvider implements FacetProviderPlugin {
     public void setSeed(long seed) {
         // comment this for testing and
 //        noise = new SubSampledNoise(new WhiteNoise(seed), new Vector2f(0.1f, 0.1f), Integer.MAX_VALUE);
-        // uncomment this for testing
-        noise = new WhiteNoise(seed);
+        // uncomment this for testing, Warning: this will slow down worldgen by a lot!!!
+         noise = new WhiteNoise(seed);
     }
 
-    private int minY(Vector3i corner, BaseFieldFacet2D facet) {
-
-        Vector3i stepX = new Vector3i(10, 0, 0);
-        Vector3i stepZ = new Vector3i(0, 0, 10);
-        Vector3i start = new Vector3i(corner);
-        Vector3i end = new Vector3i(corner).add(Volcano.MAXWIDTH, 0, Volcano.MAXWIDTH);
-        int maxY = Integer.MIN_VALUE;
-        int minY = Integer.MAX_VALUE;
-        for (Vector3i pos = new Vector3i(start); pos.x <= end.x; pos.add(stepX)) {
-            for (pos.setZ(start.z); pos.z <= end.z; pos.add(stepZ)) {
-
-                Rect2i checkRegion = Rect2i.createFromMinAndMax(pos.x() - 3, pos.z() - 3, pos.x() + 3, pos.z() + 3);
-
-                if (facet.getWorldRegion().contains(checkRegion)) {
-                    float xDiff = Math.abs(facet.getWorld(pos.x() + 3, pos.z()) - facet.getWorld(pos.x() - 3, pos.z()));
-                    float yDiff = Math.abs(facet.getWorld(pos.x(), pos.z() + 3) - facet.getWorld(pos.x(), pos.z() - 3));
-                    float xyDiff = Math.abs(facet.getWorld(pos.x() + 3, pos.z() + 3) - facet.getWorld(pos.x() - 3,
-                            pos.z() - 3));
-                    maxY = Math.max(Math.max(Math.max(maxY, (int) xDiff), (int) xyDiff), (int) yDiff);
-//                    minY = Math.min(Math.max(Math.min(minY, (int) xDiff), (int) xyDiff), (int) yDiff);
-//                    if (xDiff > 2 || yDiff > 2 || xyDiff > 2) {
-//                        return false;
-//                    }
-                }
-            }
-        }
-        return minY;
-    }
-
-    private int getLowestY(Vector3i corner, BaseFieldFacet2D facet) {
+    private int getLowestY(Vector3i corner, BaseFieldFacet2D facet, Vector2i center, int minRadius, int maxRadius) {
 
         //Note- check edges only
-        Vector3i stepX = new Vector3i(10, 0, 0);
-        Vector3i stepZ = new Vector3i(0, 0, 10);
-        Vector3i start = new Vector3i(corner);
-        Vector3i end = new Vector3i(corner).add(Volcano.MAXWIDTH, 0, Volcano.MAXWIDTH);
+        Vector2i stepX = new Vector2i(1, 0);
+        Vector2i stepY = new Vector2i(0, 1);
+        Vector2i start = new Vector2i(center).sub(maxRadius, maxRadius);
+        Vector2i end = new Vector2i(start).add(maxRadius * 2, maxRadius * 2);
+        int minRadiusSq = minRadius * minRadius;
+        int maxRadiusSq = maxRadius * maxRadius;
         int lowestY = Integer.MAX_VALUE;
-        for (Vector3i pos = new Vector3i(start); pos.x <= end.x; pos.add(stepX)) {
-            for (pos.setZ(start.z); pos.z <= end.z; pos.add(stepZ)) {
-                if (facet.getWorldRegion().contains(pos.x(), pos.z())) {
-                    int y = (int) facet.getWorld(pos.x(), pos.z());
+        for (Vector2i pos = new Vector2i(start); pos.x <= end.x; pos.add(stepX)) {
+            for (pos.setY(start.y); pos.y <= end.y; pos.add(stepY)) {
+                int centerDistSq = center.distanceSquared(pos);
+                if (facet.getWorldRegion().contains(pos)
+                && centerDistSq <= maxRadiusSq
+                && centerDistSq >= minRadiusSq) {
+                    int y = (int) facet.getWorld(pos);
                     lowestY = Math.min(y, lowestY);
                 }
-//                Rect2i checkRegion = Rect2i.createFromMinAndMax(pos.x() - 3, pos.z() - 3, pos.x() + 3, pos.z() + 3);
-//
-//                if (facet.getWorldRegion().contains(checkRegion)) {
-//                    float xDiff = Math.abs(facet.getWorld(pos.x() + 3, pos.z()) - facet.getWorld(pos.x() - 3, pos.z
-//                    ()));
-//                    float yDiff = Math.abs(facet.getWorld(pos.x(), pos.z() + 3) - facet.getWorld(pos.x(), pos.z() -
-//                    3));
-//                    float xyDiff = Math.abs(facet.getWorld(pos.x() + 3, pos.z() + 3) - facet.getWorld(pos.x() - 3,
-//                            pos.z() - 3));
-//                    if (xDiff > 2 || yDiff > 2 || xyDiff > 2) {
-//                        return false;
-//                    }
-//                }
             }
         }
         return lowestY;
